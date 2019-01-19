@@ -11,7 +11,7 @@ import tensorflow as tf
 # data set location
 data_set_folder = 'G:\\My Drive\\data_sets\\nn_Odometry\\'
 # data_set_name = 'dataset-outdoors3_512_16.tar'
-data_set_name = 'dataset-corridor4_512_16.tar'
+data_set_name = 'dataset-corridor4_512_16'
 
 path = data_set_folder + 'natural_images\\' + data_set_name
 
@@ -20,8 +20,8 @@ train_in, train_out, dev_in, dev_out, test_in, test_out, sample_freq, phase_step
 
 # get sample rate of dataset
 
-filter_time = 0.1  # s
-filter_space = 100  # degrees
+filter_time = 1  # s
+filter_space = 10  # degrees
 
 filter_indicies_t = int(np.ceil(filter_time*sample_freq)+1)
 filter_indicies_x = int(np.ceil(filter_space/phase_step)+1)
@@ -33,13 +33,8 @@ assert(np.mod(filter_indicies_x, 2) == 1)
 # intiialize model
 m, size_t, size_x, n_c = train_in.shape
 sum_over_space = False
-# model, pad_x, pad_t, learning_rate, batch_size = md.ln_model(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_filter=2, sum_over_space=sum_over_space)
-# model, pad_x, pad_t, learning_rate, batch_size = md.ln_model_deep(input_shape=(size_t, size_x, n_c), filter_shape=((filter_indicies_t, filter_indicies_x), (filter_indicies_t, filter_indicies_x)), num_filter=(16, 4))
-# model, pad_x, pad_t, learning_rate, batch_size = md.hrc_model(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_hrc=1, sum_over_space=sum_over_space)
-# model, pad_x, pad_t, learning_rate, batch_size = md.hrc_model_sep(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_hrc=1, sum_over_space=sum_over_space)
-# model, pad_x, pad_t, learning_rate, batch_size = md.hrc_model_no_flip(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_hrc=4, sum_over_space=sum_over_space)
-model, pad_x, pad_t, learning_rate, batch_size = md.ln_model_no_flip(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_filter=4, sum_over_space=sum_over_space)
-# model, pad_x, pad_t, learning_rate, batch_size = md.ln_model_no_flip_deep(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_filter=2, sum_over_space=sum_over_space)
+model, pad_x, pad_t, learning_rate, batch_size = md.ln_model(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_filter=4, sum_over_space=sum_over_space)
+model, pad_x, pad_t, learning_rate, batch_size = md.hrc_model(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_filter=4, sum_over_space=sum_over_space)
 
 # format y data to fit with output
 if sum_over_space:
