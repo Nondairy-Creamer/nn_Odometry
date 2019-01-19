@@ -9,13 +9,11 @@ import tensorflow as tf
 
 # define the input path
 # data set location
-data_set_folder = 'G:\\My Drive\\data_sets\\nn_RigidRot\\'
+data_set_folder = 'G:\\My Drive\\data_sets\\nn_Odometry\\'
+# data_set_name = 'dataset-outdoors3_512_16.tar'
+data_set_name = 'dataset-corridor4_512_16.tar'
 
-# data_set_name = 'xtPlot_ns20_xe360_xs360_ye100_ys5_pe360_ps5_sf500_tt1_nt2_hl0-2_vs100_df0-05.mat'
-data_set_name = 'xtPlot_ns20_xe360_xs360_ye100_ys5_pe360_ps5_sf1000_tt1_nt2_hl0-2_vs100_df0-05.mat'
-# data_set_name = 'xtPlot_ns20_xe360_xs360_ye100_ys5_pe360_ps5_sf100_tt1_nt2_hl0-2_vs100_df0-05.mat'
-
-path = data_set_folder + 'natural_images\\xt\\' + data_set_name
+path = data_set_folder + 'natural_images\\' + data_set_name
 
 # load in data set
 train_in, train_out, dev_in, dev_out, test_in, test_out, sample_freq, phase_step = md.load_data_rr(path)
