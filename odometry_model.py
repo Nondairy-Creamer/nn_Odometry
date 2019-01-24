@@ -34,7 +34,7 @@ def r2(y_true, y_pred):
 
 def ln_model(input_shape, filter_shape, num_filter=(8, 6)):
     learning_rate = 0.001*1
-    batch_size = np.power(2, 8)
+    batch_size = np.power(2, 6)
 
     # Define the input as a tensor with shape input_shape
     image_in = Input(input_shape)
@@ -43,7 +43,7 @@ def ln_model(input_shape, filter_shape, num_filter=(8, 6)):
     pad_y = int((filter_shape[1] - 1) / 2)
     pad_t = int((filter_shape[0] - 1) / 2)
 
-    d_rate = 0.1
+    d_rate = 0.0
     reg_val = 0.001
 
     # T4/T5

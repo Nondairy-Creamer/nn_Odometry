@@ -55,7 +55,7 @@ test_set = test_set/np.std(test_set, axis=(1, 2), keepdims=True)
 t = time.time()
 adamOpt = optimizers.Adam(lr=learning_rate)
 model.compile(optimizer=adamOpt, loss='mean_squared_error', metrics=[md.r2])
-hist = model.fit(train_set, train_ans, verbose=2, epochs=2000, batch_size=batch_size, validation_data=(dev_set, dev_ans))
+hist = model.fit(train_set, train_ans, verbose=2, epochs=1000, batch_size=batch_size, validation_data=(dev_set, dev_ans))
 elapsed = time.time() - t
 
 # grab the loss and R2 over time
