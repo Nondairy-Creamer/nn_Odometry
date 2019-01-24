@@ -1,6 +1,7 @@
-from tensorflow.keras.layers import multiply, concatenate, LSTM, Dense, Input, Activation, BatchNormalization, Conv3D, subtract, add, Lambda
+from tensorflow.keras.layers import multiply, Dropout, concatenate, LSTM, Dense, Input, Activation, BatchNormalization, Conv3D, subtract, add, Lambda
 from tensorflow.keras.models import Model
 from tensorflow.keras.initializers import glorot_uniform
+from tensorflow.keras import regularizers
 import tensorflow.keras.backend as K
 import numpy as np
 from tensorflow.keras.layers import *
@@ -33,7 +34,7 @@ def r2(y_true, y_pred):
 
 def ln_model(input_shape, filter_shape, num_filter=(8, 6)):
     learning_rate = 0.001*1
-    batch_size = np.power(2, 6)
+    batch_size = np.power(2, 8)
 
     # Define the input as a tensor with shape input_shape
     image_in = Input(input_shape)
@@ -42,20 +43,31 @@ def ln_model(input_shape, filter_shape, num_filter=(8, 6)):
     pad_y = int((filter_shape[1] - 1) / 2)
     pad_t = int((filter_shape[0] - 1) / 2)
 
+    d_rate = 0.1
+    reg_val = 0.001
+
     # T4/T5
     # intial convolution
     conv1 = Conv3D(num_filter[0], filter_shape, strides=(1, 1, 1), name='T4_T5',
-                   kernel_initializer=glorot_uniform(seed=None), activation='relu')(image_in)
+                   kernel_initializer=glorot_uniform(seed=None),
+                   kernel_regularizer=regularizers.l1(reg_val))(image_in)
+    #conv1 = BatchNormalization()(conv1)
+    conv1_a = Activation('relu')(conv1)
+    conv1_d = Dropout(d_rate)(conv1_a)
 
     # LPTCs
     # convolution that takes up all of space
     conv_x_size = int(conv1.shape[2])
     combine_filters = Conv3D(num_filter[1], (1, conv_x_size, conv_x_size), strides=(1, 1, 1), name='LPTC',
-                             kernel_initializer=glorot_uniform(seed=None), activation='relu')(conv1)
+                             kernel_initializer=glorot_uniform(seed=None),
+                             kernel_regularizer=regularizers.l1(reg_val))(conv1_d)
+    #combine_filters = BatchNormalization()(combine_filters)
+    combine_filters_a = Activation('relu')(combine_filters)
+    combine_filters_d = Dropout(d_rate)(combine_filters_a)
 
     # behavior
     behavior = Conv3D(3, (1, 1, 1), strides=(1, 1, 1), name='behavior',
-                      kernel_initializer=glorot_uniform(seed=None), activation='relu')(combine_filters)
+                      kernel_initializer=glorot_uniform(seed=None))(combine_filters_d)
 
     # Create model
     model = Model(inputs=image_in, outputs=behavior, name='ln_model')

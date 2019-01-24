@@ -9,16 +9,16 @@ import tensorflow as tf
 
 # define the input path
 # data set location
-data_set_folder = 'G:\\My Drive\\data_sets\\nn_Odometry\\composite_dataset\\'
+data_set_folder = 'G:\\My Drive\\data_sets\\nn_Odometry\\'
 data_set_name = 'image_dataset_filtered_concat.h5'
-path = data_set_folder + data_set_name
+path = data_set_folder + 'composite_dataset\\' + data_set_name
 
 # load in data set
 train_set, dev_set, test_set, train_ans, dev_ans, test_ans, sample_freq, phase_step = md.load_data_rr(path)
 
 # get sample rate of dataset
 
-filter_time = 1  # s
+filter_time = 0.5  # s
 filter_space = 30  # degrees
 
 filter_indicies_t = int(np.ceil(filter_time*sample_freq)+1)
@@ -55,7 +55,7 @@ test_set = test_set/np.std(test_set, axis=(1, 2), keepdims=True)
 t = time.time()
 adamOpt = optimizers.Adam(lr=learning_rate)
 model.compile(optimizer=adamOpt, loss='mean_squared_error', metrics=[md.r2])
-hist = model.fit(train_set, train_ans, verbose=2, epochs=500, batch_size=batch_size, validation_data=(dev_set, dev_ans))
+hist = model.fit(train_set, train_ans, verbose=2, epochs=2000, batch_size=batch_size, validation_data=(dev_set, dev_ans))
 elapsed = time.time() - t
 
 # grab the loss and R2 over time
@@ -67,21 +67,9 @@ val_r2 = hist.history['val_r2']
 
 print('model took ' + str(elapsed) + 's to train')
 
-# plot loss and R2
-plt.figure()
-plt.subplot(1, 2, 1)
-plt.plot(loss)
-plt.plot(val_loss)
-plt.legend(['loss', 'val loss'])
 
-plt.subplot(1, 2, 2)
-plt.plot(r2)
-plt.plot(val_r2)
-plt.legend(['r2', 'val r2'])
-plt.ylim((0, 1))
-plt.show()
 
-imageDict = {}
+image_dict = {}
 ww = 0
 
 for l in model.layers:
@@ -96,27 +84,46 @@ for l in model.layers:
         else:
             biases = [0]
 
-        imageDict["weight" + str(ww)] = weights
-        imageDict["biases" + str(ww)] = biases
+        image_dict["weight" + str(ww)] = weights
+        image_dict["biases" + str(ww)] = biases
 
         maxAbsW1 = np.max(np.abs(weights))
 
-        for c in range(weights.shape[2]):
-            plt.figure()
-            for w in range(weights.shape[3]):
-                plt.subplot(2, int(np.ceil(weights.shape[3]/2)), w+1)
-                img = plt.imshow(weights[:, :, c, w])
-                plt.clim(-maxAbsW1, maxAbsW1)
-                plt.axis('off')
-                img.set_cmap('RdBu_r')
-                # plt.colorbar()
+        for c_out in range(weights.shape[4]):
+            for c_in in range(weights.shape[3]):
+                plt.figure()
 
-        plt.figure()
-        x = np.arange(len(biases))
-        plt.scatter(x, biases)
+                num_plot_x = int(np.ceil(np.sqrt(weights.shape[0])))
+                num_plot_y = int(np.ceil(weights.shape[0]/num_plot_x))
+
+                fig, axs = plt.subplots(num_plot_y, num_plot_x, constrained_layout=True)
+                fig.suptitle('c_out ' + str(c_out+1) + ', c_in ' + str(c_in+1), fontsize=16)
+
+                for t_ind in range(weights.shape[0]):
+                    fig = plt.subplot(num_plot_y, num_plot_x, t_ind+1)
+                    img = plt.imshow(weights[t_ind, :, :, c_in, c_out])
+                    plt.clim(-maxAbsW1, maxAbsW1)
+                    plt.axis('off')
+                    img.set_cmap('RdBu_r')
+                    # plt.colorbar()
+
+# plot loss and R2
+plt.figure()
+plt.subplot(1, 2, 1)
+plt.plot(loss)
+plt.plot(val_loss)
+plt.legend(['loss', 'val loss'])
+
+plt.subplot(1, 2, 2)
+plt.plot(r2)
+plt.plot(val_r2)
+plt.legend(['r2', 'val r2'])
+plt.ylim((0, 1))
+
+plt.show()
 
 weights_name = 'weights_' + str(filter_time) + 'filterTime_' + str(filter_space) + 'filterSpace_' + str(int(sample_freq)) + 'sampleFreq_' + str(int(phase_step)) + 'phaseStep'
 weights_name = "-".join(weights_name.split("."))
-save_path = data_set_folder + '\\saved_parameters\\' + weights_name
-sio.savemat(save_path, imageDict)
+save_path = data_set_folder + 'saved_parameters\\' + weights_name
+sio.savemat(save_path, image_dict)
 # plot_model(model, to_file='kerasModel_structure.png')
