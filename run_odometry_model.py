@@ -35,8 +35,9 @@ m, size_t, size_y, size_x, n_c = train_set.shape
 model, pad_x, pad_y, pad_t, learning_rate, batch_size = md.ln_model(input_shape=(size_t, size_y, size_x, n_c),
                                                                     filter_shape=(filter_indicies_t, filter_indicies_y, filter_indicies_x),
                                                                     num_filter=(4, 6))
-# model, pad_x, pad_t, learning_rate, batch_size = md.hrc_model(input_shape=(size_t, size_x, n_c), filter_shape=(filter_indicies_t, filter_indicies_x), num_filter=4, sum_over_space=sum_over_space)
-
+#model, pad_x, pad_y, pad_t, learning_rate, batch_size = md.hrc_model(input_shape=(size_t, size_y, size_x, n_c),
+#                                                                    filter_shape=(filter_indicies_t, filter_indicies_y, filter_indicies_x),
+#                                                                    num_filter=(4, 6))
 # format y data to fit with output
 train_ans = train_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
 dev_ans = dev_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
