@@ -1,3 +1,5 @@
-This is a simple convolutional neural network that detects the velocity of rigidly rotating natural scenes
+This is a simple convolutional neural network that measures the rotational velocity of a freely moving camera. The dataset is taken from https://vision.in.tum.de/data/datasets/visual-inertial-dataset. Once you extract the .tar into a folder, extract_odometry_data will process it into a .h5 file. filter_odometry_data will then filter and downsample the data according to the approximate special filters measured in Drosophila. It also converts the measurements from luminance to contrast. Finally run concatinate_odometry_data to put all the data into a single file, and use run_odometry_model to train the neural network.
 
-Its principle use is to compare the strategies it uses to detect motion with those found in the fruit fly Drosophila
+The neural network currently has 2 hidden layers and one output. The first hidden layer represents the elementary motion detectors of the fly, the second layer represents the lobula plate tangential cells which sum the first layer responses over space. The last layer represents the behavior of the fly and combines the tangential cells to output the 3 dimensions of rotation. This simple network can account for about 70% of the variance of the rotation of the camera.
+
+I will eventually add a much deeper neural network which should be able to account for much more of the variance.
