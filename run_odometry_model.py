@@ -5,6 +5,7 @@ import time
 from tensorflow.keras import optimizers
 from tensorflow.keras.utils import plot_model
 import scipy.io as sio
+from tensorflow.keras.layers import Lambda
 import tensorflow as tf
 
 # define the input path
@@ -12,6 +13,7 @@ import tensorflow as tf
 data_set_folder = 'G:\\My Drive\\data_sets\\nn_Odometry\\'
 data_set_name = 'image_dataset_filtered_concat.h5'
 path = data_set_folder + 'composite_dataset\\' + data_set_name
+learn_trans = False
 
 # load in data set
 train_set, dev_set, test_set, train_ans, dev_ans, test_ans, sample_freq, phase_step = md.load_data_rr(path)
@@ -39,9 +41,14 @@ model, pad_x, pad_y, pad_t, learning_rate, batch_size = md.ln_model(input_shape=
 #                                                                    filter_shape=(filter_indicies_t, filter_indicies_y, filter_indicies_x),
 #                                                                    num_filter=(4, 6))
 # format y data to fit with output
-train_ans = train_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
-dev_ans = dev_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
-test_ans = test_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
+if learn_trans:
+    train_ans = train_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:]
+    dev_ans = dev_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:]
+    test_ans = test_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:]
+else:
+    train_ans = train_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
+    dev_ans = dev_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
+    test_ans = test_ans[:, 0:-1 - 2 * pad_t + 1, :, :, 0:3]
 
 train_ans[np.isnan(train_ans)] = 0
 dev_ans[np.isnan(dev_ans)] = 0
@@ -52,10 +59,29 @@ train_set = train_set/np.std(train_set, axis=(1, 2), keepdims=True)
 dev_set = dev_set/np.std(dev_set, axis=(1, 2), keepdims=True)
 test_set = test_set/np.std(test_set, axis=(1, 2), keepdims=True)
 
+
+# generate metrics
+def r2_1(x, y):
+    return md.r2(x, y, 0)
+def r2_2(x, y):
+    return md.r2(x, y, 1)
+def r2_3(x, y):
+    return md.r2(x, y, 2)
+def r2_4(x, y):
+    return md.r2(x, y, 3)
+def r2_5(x, y):
+    return md.r2(x, y, 4)
+def r2_6(x, y):
+    return md.r2(x, y, 5)
+
 # set up the model and fit it
 t = time.time()
 adamOpt = optimizers.Adam(lr=learning_rate)
-model.compile(optimizer=adamOpt, loss='mean_squared_error', metrics=[md.r2])
+if learn_trans:
+    model.compile(optimizer=adamOpt, loss='mean_squared_error', metrics=[r2_1, r2_2, r2_3, r2_4, r2_5, r2_6])
+else:
+    model.compile(optimizer=adamOpt, loss='mean_squared_error', metrics=[r2_1, r2_2, r2_3])
+
 hist = model.fit(train_set, train_ans, verbose=2, epochs=1000, batch_size=batch_size, validation_data=(dev_set, dev_ans))
 elapsed = time.time() - t
 
@@ -63,8 +89,35 @@ elapsed = time.time() - t
 #model.save('kerasModel_' + str(num_filt) + 'Filt' + '.h5')
 loss = hist.history['loss']
 val_loss = hist.history['val_loss']
-r2 = hist.history['r2']
-val_r2 = hist.history['val_r2']
+
+if learn_trans:
+    r2 = np.zeros((6, len(loss)))
+    val_r2 = np.zeros((6, len(loss)))
+
+    r2[0, :] = hist.history['r2_1']
+    r2[1, :] = hist.history['r2_2']
+    r2[2, :] = hist.history['r2_3']
+    r2[3, :] = hist.history['r2_4']
+    r2[4, :] = hist.history['r2_5']
+    r2[5, :] = hist.history['r2_6']
+
+    val_r2[0, :] = hist.history['val_r2_1']
+    val_r2[1, :] = hist.history['val_r2_2']
+    val_r2[2, :] = hist.history['val_r2_3']
+    val_r2[3, :] = hist.history['val_r2_4']
+    val_r2[4, :] = hist.history['val_r2_5']
+    val_r2[5, :] = hist.history['val_r2_6']
+else:
+    r2 = np.zeros((3, len(loss)))
+    val_r2 = np.zeros((3, len(loss)))
+
+    r2[0, :] = hist.history['r2_1']
+    r2[1, :] = hist.history['r2_2']
+    r2[2, :] = hist.history['r2_3']
+
+    val_r2[0, :] = hist.history['val_r2_1']
+    val_r2[1, :] = hist.history['val_r2_2']
+    val_r2[2, :] = hist.history['val_r2_3']
 
 print('model took ' + str(elapsed) + 's to train')
 
@@ -116,8 +169,8 @@ plt.plot(val_loss)
 plt.legend(['loss', 'val loss'])
 
 plt.subplot(1, 2, 2)
-plt.plot(r2)
-plt.plot(val_r2)
+plt.plot(r2.T)
+plt.plot(val_r2.T)
 plt.legend(['r2', 'val r2'])
 plt.ylim((0, 1))
 

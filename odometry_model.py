@@ -27,10 +27,19 @@ def load_data_rr(path):
     return train_set, dev_set, test_set, train_ans, dev_ans, test_ans, sample_freq, phase_step
 
 
-def r2(y_true, y_pred):
-    r2_value = 1 - K.sum(K.square(y_pred - y_true))/K.sum(K.square(y_true - K.mean(y_true)))
+def r2(y_true, y_pred, ind):
+    y_t = y_true[:, :, :, :, ind:ind+1]
+    y_p = y_pred[:, :, :, :, ind:ind+1]
+    num = K.sum(K.square(y_p - y_t), axis=1, keepdims=True)
+    denom = K.sum(K.square(y_t - K.mean(y_t)), axis=1, keepdims=True)
+    r2_value = 1 - K.exp(K.mean(K.log(num/denom)))
     return r2_value
 
+"""
+def r2(y_true, y_pred, ind):
+    r2_value = 1 - K.sum(K.square(y_pred - y_true))/K.sum(K.square(y_true - K.mean(y_true)))
+    return r2_value
+"""
 
 def ln_model(input_shape, filter_shape, num_filter=(8, 6)):
     learning_rate = 0.001*1
