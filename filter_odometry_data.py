@@ -100,6 +100,8 @@ for data_set_in in data_set_name:
         dev_set = (dev_set_small - dev_set_big)/dev_set_big
         test_set = (test_set_small - test_set_big)/test_set_big
 
+        train_set = np.reshape(train_set, (train_set.shape[1]))
+
         # save the new data
         h5f = h5py.File(data_set_folder + data_set_in + '\\image_dataset_filtered.h5', 'w')
 
@@ -115,7 +117,7 @@ for data_set_in in data_set_name:
         h5f.create_dataset('phase_step', data=[2*std_small])
 
         h5f.close()
-        sio.savemat(data_set_folder + data_set_in + '\\image_dataset_filtered_temp.mat', {'dev_set': train_set, 'dev_ans': train_ans})
+        sio.savemat(data_set_folder + data_set_in + '\\image_dataset_filtered_temp.mat', {'dev_set': dev_set, 'dev_ans': dev_ans})
 
     #except:
         #print('error in:' + data_set_in)

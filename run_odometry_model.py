@@ -21,7 +21,7 @@ train_set, dev_set, test_set, train_ans, dev_ans, test_ans, sample_freq, phase_s
 # get sample rate of dataset
 
 filter_time = 0.5  # s
-filter_space = 30  # degrees
+filter_space = 50  # degrees
 
 filter_indicies_t = int(np.ceil(filter_time*sample_freq)+1)
 filter_indicies_y = int(np.ceil(filter_space/phase_step)+1)

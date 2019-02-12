@@ -106,9 +106,9 @@ for data_set_in in data_set_name:
         test_num = int(np.ceil(num_chunks*test_frac))
         train_num = int(num_chunks - dev_num - test_num)
 
-        train_ind = chunk_order[range(0, train_num)]
-        dev_ind = chunk_order[range(train_num, train_num+dev_num)]
-        test_ind = chunk_order[range(train_num+dev_num, train_num+dev_num+test_num)]
+        train_ind = chunk_order[slice(0, train_num)]
+        dev_ind = chunk_order[slice(train_num, train_num+dev_num)]
+        test_ind = chunk_order[slice(train_num+dev_num, train_num+dev_num+test_num)]
 
         # save the data
         h5f = h5py.File(folder_path + 'image_dataset.h5', 'w')
