@@ -16,8 +16,10 @@ train_set, dev_set, test_set, train_ans, dev_ans, test_ans, sample_freq, phase_s
 
 # get sample rate of dataset
 
-filter_time = 0.5  # s
-filter_space = 30  # degrees
+filter_time = 0.4  # s
+filter_space = 10  # degrees
+sum_over_space = True
+num_filter = (4, 1)
 
 filter_indicies_t = int(np.ceil(filter_time*sample_freq)+1)
 filter_indicies_x = int(np.ceil(filter_space/phase_step)+1)
@@ -26,19 +28,36 @@ filter_indicies_x = int(np.ceil(filter_space/phase_step)+1)
 assert(np.mod(filter_indicies_t, 2) == 1)
 assert(np.mod(filter_indicies_x, 2) == 1)
 
+
 # intiialize model
 m, size_t, size_x, n_c = train_set.shape
 model, pad_x, pad_t, learning_rate, batch_size = md.ln_model(input_shape=(size_t, size_x, n_c),
                                                              filter_shape=(filter_indicies_t, filter_indicies_x),
-                                                             num_filter=(2, 1))
+                                                             sum_over_space=sum_over_space,
+                                                             num_filter=num_filter)
+#model, pad_x, pad_t, learning_rate, batch_size = md.ln_model_deep(input_shape=(size_t, size_x, n_c),
+#                                                             filter_shape=(filter_indicies_t, filter_indicies_x),
+#                                                             sum_over_space=sum_over_space,
+#                                                             num_filter=num_filter)
 #model, pad_x, pad_t, learning_rate, batch_size = md.hrc_model(input_shape=(size_t, size_x, n_c),
 #                                                              filter_shape=(filter_indicies_t, filter_indicies_x),
-#                                                              num_filter=(4, 1))
+#                                                              sum_over_space=sum_over_space,
+#                                                              num_filter=num_filter)
 
 # format y data to fit with output
-train_ans = train_ans[:, 0:-1 - 2 * pad_t + 1, :, :]
-dev_ans = dev_ans[:, 0:-1 - 2 * pad_t + 1, :, :]
-test_ans = test_ans[:, 0:-1 - 2 * pad_t + 1, :, :]
+if sum_over_space:
+    train_ans = train_ans[:, 0:-1 - 2 * pad_t + 1, :, :]
+    dev_ans = dev_ans[:, 0:-1 - 2 * pad_t + 1, :, :]
+    test_ans = test_ans[:, 0:-1 - 2 * pad_t + 1, :, :]
+else:
+    # repeat y data to fit output conv size
+    train_ans = np.tile(train_ans, (1, 1, size_x, 1))
+    dev_ans = np.tile(dev_ans, (1, 1, size_x, 1))
+    test_ans = np.tile(test_ans, (1, 1, size_x, 1))
+
+    train_ans = train_ans[:, 0:-1-2*pad_t+1, pad_x:-1-pad_x+1, :]
+    dev_ans = dev_ans[:, 0:-1-2*pad_t+1, pad_x:-1-pad_x+1, :]
+    test_ans = test_ans[:, 0:-1-2*pad_t+1, pad_x:-1-pad_x+1, :]
 
 train_ans[np.isnan(train_ans)] = 0
 dev_ans[np.isnan(dev_ans)] = 0
@@ -116,7 +135,7 @@ plt.legend(['r2', 'val r2'])
 plt.ylim((0, 1))
 plt.show()
 
-weights_name = 'weights_' + str(filter_time) + 'filterTime_' + str(filter_space) + 'filterSpace_' + str(int(sample_freq)) + 'sampleFreq_' + str(int(phase_step)) + 'phaseStep'
+weights_name = model.name + '_' + str(num_filter[0]) + 'inputFilters_' + str(sum_over_space) + 'SumSpace' + str(filter_time) + 'filterTime_' + str(filter_space) + 'filterSpace_' + str(int(sample_freq)) + 'sampleFreq_' + str(int(phase_step)) + 'phaseStep'
 weights_name = "-".join(weights_name.split("."))
 save_path = data_set_folder + 'saved_parameters\\' + weights_name
 sio.savemat(save_path, image_dict)

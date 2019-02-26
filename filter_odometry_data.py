@@ -28,7 +28,8 @@ force_tar_extract = False
 data_set_folder = 'G:\\My Drive\\data_sets\\nn_Odometry\\natural_images\\'
 # data_set_name = 'dataset-corridor1_512_16'
 # data_set_name = 'dataset-corridor4_512_16'
-data_set_name = sorted(os.listdir(data_set_folder))[0:11]
+#data_set_name = sorted(os.listdir(data_set_folder))[0:11]
+data_set_name = sorted(os.listdir(data_set_folder))[2:3]
 total_num_folder = len(data_set_name)
 
 for data_set_in in data_set_name:
@@ -99,8 +100,6 @@ for data_set_in in data_set_name:
         train_set = (train_set_small - train_set_big)/train_set_big
         dev_set = (dev_set_small - dev_set_big)/dev_set_big
         test_set = (test_set_small - test_set_big)/test_set_big
-
-        train_set = np.reshape(train_set, (train_set.shape[1]))
 
         # save the new data
         h5f = h5py.File(data_set_folder + data_set_in + '\\image_dataset_filtered.h5', 'w')
